@@ -10,7 +10,7 @@
 // Render circles with this many segments.
 $fn = 120;
 
-// Reduce every surface by this much to allow for overextrusion
+// Reduce sliding surfaces this much to allow for overextrusion
 give = 0.1;
 
 //
@@ -18,18 +18,19 @@ give = 0.1;
 //
 
 // Length of the placeholder eyepiece tube
-eyepiece_tube_length = 30;
+eyepiece_tube_length = 77;
 // Inner radius of the eyepiece tube
-eyepiece_tube_radius = 12.5;
+eyepiece_tube_radius = 12.55;
 // Thickness of the eyepiece tube
-eyepiece_tube_thickness = 3;
+eyepiece_tube_thickness = 1.4;
+
+// Inner radius of the spacers and sleeves.
+eyepiece_inner_radius = 9.8;
 
 // Thickness of the retaining sleeve
 eyepiece_retainer_thickness = 2.7;
-// Inner radius of the retaining sleeve
-eyepiece_inner_radius = eyepiece_tube_radius - eyepiece_retainer_thickness;
-// Length of the retaining sleeve
-eyepiece_retainer_length = 10;
+// Length of the retaining sleeves (x2)
+eyepiece_retainer_length = 20;
 
 // Length of the spacer before the bevel (the thick part)
 eyepiece_spacer_length_before = 1.5;
@@ -41,26 +42,22 @@ eyepiece_spacer_length_after = 1.75;
 eyepiece_spacer_radius = eyepiece_inner_radius + eyepiece_spacer_bevel;
 // Total length of the spacer
 eyepiece_spacer_length = eyepiece_spacer_length_before + eyepiece_spacer_bevel + eyepiece_spacer_length_after;
+// Nominal length of 2 lenses + 4 spacers, including the slight gaps.
+eyepiece_lens_assembly_length = 4 * (eyepiece_spacer_length + 0.25);
 
 // Thickness of the flange at the end of the tube
-eyepiece_flange_thickness = 3;
+eyepiece_flange_thickness = 2;
+// Length of the collar that goes outside the tube to grip it.
+collar_length = 10;
 
 // Layout grid step for printing
 grid = 50;
 
-// Plain tubing, placeholder for metal tubing to come.
-module eyepiece_tube() {
-    difference() {
-        cylinder(h = eyepiece_tube_length, r = eyepiece_tube_radius + eyepiece_tube_thickness - give);
-        cylinder(h = eyepiece_tube_length, r = eyepiece_tube_radius + give);
-    }
-}
-
 // Retaining sleeve, to fit inside eyepiece tube.
 module eyepiece_retainer() {
     difference() {
-        cylinder(h = eyepiece_retainer_length, r = eyepiece_tube_radius - give);
-        cylinder(h = eyepiece_retainer_length, r = eyepiece_inner_radius + give);
+        cylinder(h = eyepiece_retainer_length, r = eyepiece_tube_radius);
+        cylinder(h = eyepiece_retainer_length, r = eyepiece_inner_radius);
     }
 }
 
@@ -69,13 +66,13 @@ module eyepiece_bevel() {
     union() {
         intersection() {
             // Outer limit of the volume
-            cylinder(h = eyepiece_spacer_length, r = eyepiece_spacer_radius + give);
+            cylinder(h = eyepiece_spacer_length, r = eyepiece_spacer_radius);
             // Cone that includes the bevel surface itself.
-            translate([0, 0, eyepiece_spacer_length_before - eyepiece_inner_radius - give])
+            translate([0, 0, eyepiece_spacer_length_before - eyepiece_inner_radius])
                 cylinder(h = eyepiece_tube_radius * 2, r1 = 0, r2 = eyepiece_tube_radius * 2);
         }
         // Inner limit of the volume
-        cylinder(h = eyepiece_spacer_length, r = eyepiece_inner_radius + give);
+        cylinder(h = eyepiece_spacer_length, r = eyepiece_inner_radius);
     }
 }
 
@@ -90,22 +87,50 @@ module eyepiece_spacer() {
 // Last spacer in the stack has a flange that sits outside the tube.
 module eyepiece_end_spacer() {
     union() {
+        // Spacer part to hold the lens
         translate([0, 0, eyepiece_flange_thickness])
             eyepiece_spacer();
+        // Flat outside part
         difference() {
             cylinder(h = eyepiece_flange_thickness, r = eyepiece_tube_radius + eyepiece_tube_thickness - give);
             cylinder(h = eyepiece_flange_thickness, r = eyepiece_inner_radius + give);
         }
+        // Part that grips the tube
+        difference() {
+            cylinder(h = collar_length, r = eyepiece_tube_radius + eyepiece_tube_thickness + eyepiece_flange_thickness);
+            cylinder(h = collar_length, r = eyepiece_inner_radius);
+            translate([0, 0, eyepiece_flange_thickness])
+                cylinder(h = collar_length, r = eyepiece_tube_radius + eyepiece_tube_thickness);
+        }
     }
 }
 
+// Other end of the stack also gets a collar to hold things together
+module eyepiece_collar() {
+    union() {
+        // Outside parts
+        difference() {
+            cylinder(h = collar_length, r = eyepiece_tube_radius + eyepiece_tube_thickness + eyepiece_flange_thickness);
+            cylinder(h = collar_length, r = eyepiece_inner_radius);
+            translate([0, 0, eyepiece_flange_thickness])
+                cylinder(h = collar_length, r = eyepiece_tube_radius + eyepiece_tube_thickness);
+            }
+        }
+        // Inside parts
+        difference() {
+            cylinder(h = eyepiece_tube_length + eyepiece_flange_thickness - (eyepiece_lens_assembly_length + 2 * eyepiece_retainer_length), r = eyepiece_tube_radius);
+            cylinder(h = eyepiece_tube_length + eyepiece_flange_thickness - (eyepiece_lens_assembly_length + 2 * eyepiece_retainer_length), r = eyepiece_inner_radius);
+        }
+}
+
 module eyepiece() {
-    eyepiece_tube();
-    translate([0, grid, 0]) eyepiece_retainer();
+    translate([0, 0, 0]) eyepiece_collar();
     translate([grid, 0, 0]) eyepiece_end_spacer();
     translate([grid, grid, 0]) eyepiece_spacer();
     translate([grid * 2, 0, 0]) eyepiece_spacer();
     translate([grid * 2, grid, 0]) eyepiece_spacer();
+    translate([grid * 3, 0, 0]) eyepiece_retainer();
+    translate([grid * 3, grid, 0]) eyepiece_retainer();
 }
 
 module everything() {
