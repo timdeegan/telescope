@@ -11,7 +11,7 @@
 $fn = 120;
 
 // Reduce sliding surfaces this much to allow for overextrusion
-give = 0.1;
+give = 0.05;
 
 //
 // Eyepiece
@@ -20,9 +20,9 @@ give = 0.1;
 // Length of the eyepiece tube
 eyepiece_tube_length = 77;
 // Inner radius of the eyepiece tube
-eyepiece_tube_radius = 12.55;
+eyepiece_tube_radius = 12.6;
 // Thickness of the eyepiece tube
-eyepiece_tube_thickness = 1.5;
+eyepiece_tube_thickness = 1.55;
 
 // Inner radius of the spacers and sleeves.
 eyepiece_inner_radius = 9.8;
