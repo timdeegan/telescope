@@ -53,7 +53,7 @@ main_tube_length = 250;
 // Inner radius of the main tube
 main_tube_radius = 27.05;
 // Thickness of the main tube
-main_tube_thickness = 1.5;
+main_tube_thickness = 1.55;
 
 // Inner radius of the spacers and sleeves.
 main_inner_radius = 24.5;
@@ -75,6 +75,9 @@ main_lens_assembly_length = 2 * (main_spacer_length + 0.25);
 
 // Retaining sleeve in front of the objective; adjust length to make focus work.
 main_retainer_length = 36;
+
+// Retaining sleeve behind the baffles
+baffle_retainer_length = 20;
 
 // Length of the plug
 plug_length = 30;
@@ -228,6 +231,14 @@ module baffle(height, length) {
     }
 }
 
+// A retaining ring (glued?) to hold the back of the stack of baffles.
+module baffle_retainer() {
+    difference() {
+        cylinder(h = baffle_retainer_length, r = main_tube_radius);
+        cylinder(h = baffle_retainer_length, r = main_inner_radius);
+    }
+}
+
 // The end plug that holds the eyepiece/focus tube.
 module plug() {
     union() {
@@ -276,6 +287,7 @@ module main() {
     translate([grid, 0, 0]) baffle(height = 3.5, length = 25 - main_spacer_length_before);
     translate([grid, grid, 0]) baffle(height = 8, length = 40);
     translate([grid, grid * 2, 0]) baffle(height = 13, length = 48);   
+    translate([grid, grid * 3, 0]) baffle_retainer();   
 }
 
 
